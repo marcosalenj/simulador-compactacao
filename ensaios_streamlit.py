@@ -19,27 +19,26 @@ def gerar_grau_compactacao(tipo):
         valores = [round(i, 1) for i in frange(100.0, 102.0, 0.1)]
     return random.choice(valores)
 
+# Configuração da página
 st.set_page_config(page_title="Ensaios de Solo", layout="centered")
 st.title("Simulador de Ensaios de Solo")
 
+# Interface
 tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / Sub-base"])
-qtd = st.text_input("Quantidade de ensaios")
-peso_cilindro = st.text_input("Peso do cilindro (g)")
-volume_cilindro = st.text_input("Volume do cilindro (L)")
-densidade_maxima = st.text_input("Densidade máxima (ex: 1788 → 1.788)")
-umidade_hot = st.text_input("Umidade ótima (%)")
+qtd = st.number_input("Quantidade de ensaios", min_value=1, step=1)
+peso_cilindro = st.number_input("Peso do cilindro (g)", min_value=0.0, format="%.2f")
+volume_cilindro = st.number_input("Volume do cilindro (L)", min_value=0.0, format="%.2f")
+densidade_maxima = st.number_input("Densidade máxima (ex: 1788 → 1.788)", min_value=0.0, format="%.3f")
+umidade_hot = st.number_input("Umidade ótima (%)", min_value=0.0, format="%.1f")
+
 executar = st.button("Gerar Ensaios")
 
+# Processamento
 if executar:
-    try:
-        qtd = int(qtd)
-        peso_cilindro = float(peso_cilindro.replace(',', '.'))
-        volume_cilindro = float(volume_cilindro.replace(',', '.'))
-        dens_max = float(densidade_maxima.replace(',', '').replace('.', '')) / 1000
-        umidade_hot = float(umidade_hot.replace(',', '.'))
-    except ValueError:
+    if densidade_maxima == 0.0 or umidade_hot == 0.0 or volume_cilindro == 0.0 or peso_cilindro == 0.0:
         st.error("⚠️ Preencha todos os campos corretamente.")
     else:
+        dens_max = densidade_maxima
         umidades = gerar_umidades(umidade_hot, qtd)
         st.success("✅ Ensaios gerados com sucesso!")
 
