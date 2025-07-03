@@ -25,7 +25,7 @@ tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / 
 qtd_raw = st.text_input("Quantidade de ensaios")
 peso_raw = st.text_input("Peso do cilindro (g)")
 volume_raw = st.text_input("Volume do cilindro (L)")
-dens_raw = st.text_input("Densidade máxima (ex: 1788 → 1.788)")
+dens_raw = st.text_input("Densidade máxima")
 umidade_raw = st.text_input("Umidade ótima (%)")
 
 executar = st.button("Gerar Ensaios")
@@ -54,10 +54,10 @@ if executar:
             delta_umid = round(umidade - umidade_hot, 2)
 
             with st.expander(f"🔹 Ensaio {i+1:02}"):
-                st.markdown(f"- **Umidade:** {umidade:.1f} %")
-                st.markdown(f"- **Grau de Compactação:** {grau:.1f} %")
-                st.markdown(f"- **Densidade Seca:** {dens_sec:.3f} g/cm³")
-                st.markdown(f"- **Densidade Úmida:** {dens_umid:.3f} g/cm³")
-                st.markdown(f"- **Peso do Solo:** {peso_solo:.2f} g")
                 st.markdown(f"- **Peso do Cilindro + Solo:** {int(round(peso_total))} g")
-                st.markdown(f"- **Δ Umidade:** {delta_umid:.2f} %")
+                st.markdown(f"- **Peso do Solo:** {int(round(peso_solo))} g")
+                st.markdown(f"- **Densidade Úmida:** {dens_umid:.3f} g/cm³")
+                st.markdown(f"- **Umidade:** {umidade:.1f} %")
+                st.markdown(f"- **Densidade Seca:** {dens_sec:.3f} g/cm³")
+                st.markdown(f"- **Grau de Compactação:** {grau:.1f} %")
+                st.markdown(f"- **Δ Umidade:** {delta_umid:.1f}")
