@@ -17,23 +17,19 @@ def gerar_grau_compactacao(tipo):
         return round(random.uniform(94.5, 96.4), 1)
     return round(random.uniform(100.0, 102.0), 1)
 
-# Configuração da página
 st.set_page_config(page_title="Ensaios de Solo", layout="centered")
 st.title("Simulador de Ensaios de Solo")
 
-# Interface
 tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / Sub-base"])
 
-# Entradas com teclado numérico e sem valor padrão
-qtd_raw = st.text_input("Quantidade de ensaios", "", key="qtd", inputmode="numeric")
-peso_raw = st.text_input("Peso do cilindro (g)", "", key="peso", inputmode="decimal")
-volume_raw = st.text_input("Volume do cilindro (L)", "", key="volume", inputmode="decimal")
-dens_raw = st.text_input("Densidade máxima (ex: 1788 → 1.788)", "", key="dens", inputmode="decimal")
-umidade_raw = st.text_input("Umidade ótima (%)", "", key="umid", inputmode="decimal")
+qtd_raw = st.text_input("Quantidade de ensaios")
+peso_raw = st.text_input("Peso do cilindro (g)")
+volume_raw = st.text_input("Volume do cilindro (L)")
+dens_raw = st.text_input("Densidade máxima (ex: 1788 → 1.788)")
+umidade_raw = st.text_input("Umidade ótima (%)")
 
 executar = st.button("Gerar Ensaios")
 
-# Processamento
 if executar:
     try:
         qtd = int(qtd_raw)
