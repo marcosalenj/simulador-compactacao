@@ -22,11 +22,12 @@ st.title("Simulador de Ensaios de Solo")
 
 tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / Sub-base"])
 
-qtd = st.number_input("Quantidade de ensaios", min_value=1, step=1)
-peso_cilindro = st.number_input("Peso do cilindro (g)", min_value=0.0, format="%.2f")
-volume_cilindro = st.number_input("Volume do cilindro (L)", min_value=0.0, format="%.2f")
-densidade_maxima = st.number_input("Densidade máxima (ex: 1788 → 1.788)", min_value=0.0, format="%.3f")
-umidade_hot = st.number_input("Umidade ótima (%)", min_value=0.0, format="%.1f")
+# Campos com valor inicial 0
+qtd = st.number_input("Quantidade de ensaios", min_value=1, value=1, step=1)
+peso_cilindro = st.number_input("Peso do cilindro (g)", min_value=0.0, value=0.0, format="%.2f")
+volume_cilindro = st.number_input("Volume do cilindro (L)", min_value=0.0, value=0.0, format="%.2f")
+densidade_maxima = st.number_input("Densidade máxima (ex: 1788 → 1.788)", min_value=0.0, value=0.0, format="%.3f")
+umidade_hot = st.number_input("Umidade ótima (%)", min_value=0.0, value=0.0, format="%.1f")
 
 executar = st.button("Gerar Ensaios")
 
