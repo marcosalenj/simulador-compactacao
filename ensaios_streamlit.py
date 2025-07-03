@@ -20,9 +20,12 @@ def gerar_grau_compactacao(tipo):
 st.set_page_config(page_title="Ensaios de Solo", layout="centered")
 st.title("Simulador de Ensaios de Solo")
 
-tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / Sub-base"])
+tipo = st.selectbox(
+    "Tipo de ensaio:",
+    options=["", "1º Aterro / Ligação", "2º Aterro / Sub-base"],
+    format_func=lambda x: "Selecione o tipo" if x == "" else x
+)
 
-# Campos com valor inicial 0
 qtd = st.number_input("Quantidade de ensaios", min_value=1, value=1, step=1)
 peso_cilindro = st.number_input("Peso do cilindro (g)", min_value=0.0, value=0.0, format="%.2f")
 volume_cilindro = st.number_input("Volume do cilindro (L)", min_value=0.0, value=0.0, format="%.2f")
@@ -32,7 +35,9 @@ umidade_hot = st.number_input("Umidade ótima (%)", min_value=0.0, value=0.0, fo
 executar = st.button("Gerar Ensaios")
 
 if executar:
-    if densidade_maxima == 0.0 or umidade_hot == 0.0 or volume_cilindro == 0.0 or peso_cilindro == 0.0:
+    if tipo == "":
+        st.error("⚠️ Por favor, selecione o tipo de ensaio.")
+    elif densidade_maxima == 0.0 or umidade_hot == 0.0 or volume_cilindro == 0.0 or peso_cilindro == 0.0:
         st.error("⚠️ Preencha todos os campos corretamente.")
     else:
         umidades = gerar_umidades(umidade_hot, qtd)
