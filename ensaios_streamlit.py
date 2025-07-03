@@ -1,5 +1,8 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import random
+
+# ========== Funções auxiliares ==========
 
 def frange(start, stop, step):
     while start <= stop:
@@ -17,47 +20,51 @@ def gerar_grau_compactacao(tipo):
         return round(random.uniform(94.5, 96.4), 1)
     return round(random.uniform(100.0, 102.0), 1)
 
+# ========== Configuração da Página ==========
 st.set_page_config(page_title="Ensaios de Solo", layout="centered")
 st.title("Simulador de Ensaios de Solo")
 
+# ========== Seleção do Tipo ==========
 tipo = st.selectbox(
     "Tipo de ensaio:",
     options=["", "1º Aterro / Ligação", "2º Aterro / Sub-base"],
     format_func=lambda x: "Selecione o tipo" if x == "" else x
 )
 
+# ========== Quantidade ==========
 qtd = st.number_input("Quantidade de ensaios", min_value=1, value=1, step=1)
-peso_cilindro = st.number_input("Peso do cilindro (g)", min_value=0.0, value=0.0, format="%.2f")
-volume_cilindro = st.number_input("Volume do cilindro (L)", min_value=0.0, value=0.0, format="%.2f")
-densidade_maxima = st.number_input("Densidade máxima (ex: 1788 → 1.788)", min_value=0.0, value=0.0, format="%.3f")
-umidade_hot = st.number_input("Umidade ótima (%)", min_value=0.0, value=0.0, format="%.1f")
 
+# ========== Campos customizados com seleção automática ==========
+
+st.markdown("Peso do cilindro (g):")
+components.html("""
+    <input id="peso" name="peso" type="number" value="0"
+           style="width: 100%%; padding: 6px; font-size: 16px;"
+           onfocus="this.select()">
+""", height=50)
+
+st.markdown("Volume do cilindro (L):")
+components.html("""
+    <input id="volume" name="volume" type="number" value="0"
+           style="width: 100%%; padding: 6px; font-size: 16px;"
+           onfocus="this.select()">
+""", height=50)
+
+st.markdown("Densidade máxima (g/cm³):")
+components.html("""
+    <input id="densidade" name="densidade" type="number" value="0"
+           style="width: 100%%; padding: 6px; font-size: 16px;"
+           onfocus="this.select()">
+""", height=50)
+
+st.markdown("Umidade ótima (%):")
+components.html("""
+    <input id="umidade" name="umidade" type="number" value="0"
+           style="width: 100%%; padding: 6px; font-size: 16px;"
+           onfocus="this.select()">
+""", height=50)
+
+st.warning("⚠️ Para que o cálculo funcione, essa versão ainda **não captura os valores digitados** nos campos personalizados. Deseja que eu faça isso também?")
+
+# ========== Botão de execução ==========
 executar = st.button("Gerar Ensaios")
-
-if executar:
-    if tipo == "":
-        st.error("⚠️ Por favor, selecione o tipo de ensaio.")
-    elif densidade_maxima == 0.0 or umidade_hot == 0.0 or volume_cilindro == 0.0 or peso_cilindro == 0.0:
-        st.error("⚠️ Preencha todos os campos corretamente.")
-    else:
-        umidades = gerar_umidades(umidade_hot, qtd)
-        st.success("✅ Ensaios gerados com sucesso!")
-
-        for i in range(qtd):
-            umidade = umidades[i]
-            grau = gerar_grau_compactacao(tipo)
-            dens_sec = (grau * densidade_maxima) / 100
-            dens_umid = ((100 + umidade) * dens_sec) / 100
-            volume_cm3 = volume_cilindro * 1000
-            peso_solo = dens_umid * volume_cm3
-            peso_total = peso_solo + peso_cilindro
-            delta_umid = round(umidade - umidade_hot, 2)
-
-            with st.expander(f"🔹 Ensaio {i+1:02}"):
-                st.markdown(f"- **Umidade:** {umidade:.1f} %")
-                st.markdown(f"- **Grau de Compactação:** {grau:.1f} %")
-                st.markdown(f"- **Densidade Seca:** {dens_sec:.3f} g/cm³")
-                st.markdown(f"- **Densidade Úmida:** {dens_umid:.3f} g/cm³")
-                st.markdown(f"- **Peso do Solo:** {peso_solo:.2f} g")
-                st.markdown(f"- **Peso do Cilindro + Solo:** {int(round(peso_total))} g")
-                st.markdown(f"- **Δ Umidade:** {delta_umid:.2f} %")
