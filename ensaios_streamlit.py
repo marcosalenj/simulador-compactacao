@@ -22,22 +22,16 @@ st.title("Simulador de Ensaios de Solo")
 
 tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / Sub-base"])
 
-qtd_raw = st.text_input("Quantidade de ensaios")
-peso_raw = st.text_input("Peso do cilindro (g)")
-volume_raw = st.text_input("Volume do cilindro (L)")
-dens_raw = st.text_input("Densidade máxima (ex: 1788 → 1.788)")
-umidade_raw = st.text_input("Umidade ótima (%)")
+qtd = st.number_input("Quantidade de ensaios", min_value=1, step=1)
+peso_cilindro = st.number_input("Peso do cilindro (g)", min_value=0.0, format="%.2f")
+volume_cilindro = st.number_input("Volume do cilindro (L)", min_value=0.0, format="%.2f")
+densidade_maxima = st.number_input("Densidade máxima (ex: 1788 → 1.788)", min_value=0.0, format="%.3f")
+umidade_hot = st.number_input("Umidade ótima (%)", min_value=0.0, format="%.1f")
 
 executar = st.button("Gerar Ensaios")
 
 if executar:
-    try:
-        qtd = int(qtd_raw)
-        peso_cilindro = float(peso_raw.replace(",", "."))
-        volume_cilindro = float(volume_raw.replace(",", "."))
-        densidade_maxima = float(dens_raw.replace(",", "").replace(".", "")) / 1000
-        umidade_hot = float(umidade_raw.replace(",", "."))
-    except:
+    if densidade_maxima == 0.0 or umidade_hot == 0.0 or volume_cilindro == 0.0 or peso_cilindro == 0.0:
         st.error("⚠️ Preencha todos os campos corretamente.")
     else:
         umidades = gerar_umidades(umidade_hot, qtd)
