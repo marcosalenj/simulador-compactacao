@@ -145,7 +145,7 @@ if executar:
                 st.markdown(f"- **Umidade:** {str(umidade).replace('.', ',')} %")
                 st.markdown(f"- **Densidade Seca:** {int(round(dens_sec * 1000))} g/cm³")
                 st.markdown(f"- **Grau de Compactação:** {str(grau).replace('.', ',')} %")
-                st.markdown(f"- **Δ Umidade:** {str(delta_umid).replace('.', ',')}")
+                st.markdown(f"- **Desvio de Umidade:** {str(delta_umid).replace('.', ',')}")
 
 
 
