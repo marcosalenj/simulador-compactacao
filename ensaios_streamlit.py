@@ -9,32 +9,61 @@ def frange(start, stop, step):
         yield round(start, 2)
         start += step
 
-# 🔧 Diferença mínima entre ensaios consecutivos (em décimos)
-diferenca_minima = 3  # ← AJUSTE AQUI SE QUISER OUTRO VALOR (ex: 2 para 0,2 de diferença)
-
-def gerar_umidades_diferenciadas(umidade_hot, quantidade):
-    """Gera uma sequência de umidades com diferença mínima entre valores consecutivos"""
-    inicio = round(umidade_hot - 1.0, 1)
-    fim = round(umidade_hot - 0.1, 1)
-    valores_possiveis = [round(i, 1) for i in frange(inicio, fim, 0.1)]
-
-    umidades = []
-    atual = random.choice(valores_possiveis)
-    umidades.append(atual)
-
-    for _ in range(1, quantidade):
-        opcoes_validas = [u for u in valores_possiveis if abs(u - atual) * 10 >= diferenca_minima]
-        if not opcoes_validas:
-            opcoes_validas = valores_possiveis  # fallback de segurança
-        atual = random.choice(opcoes_validas)
-        umidades.append(atual)
-
-    return umidades
+# 🔧 CONFIGURAÇÕES QUE PODE AJUSTAR
+diferenca_minima = 3        # ← diferença mínima entre umidades (ex: 0,3%)
+diferenca_peso_minima = 5   # ← diferença mínima no peso total (g)
 
 def gerar_grau_compactacao(tipo):
     if tipo == "1º Aterro / Ligação":
         return round(random.uniform(94.5, 96.4), 1)
     return round(random.uniform(100.0, 102.0), 1)
+
+def gerar_umidades_com_criterios(umidade_hot, quantidade, peso_cilindro, volume_cm3, densidade_maxima, tipo):
+    """Gera umidades respeitando diferença mínima de umidade e peso total"""
+    inicio = round(umidade_hot - 1.0, 1)
+    fim = round(umidade_hot - 0.1, 1)
+    valores_possiveis = [round(i, 1) for i in frange(inicio, fim, 0.1)]
+
+    umidades = []
+    
+    atual = random.choice(valores_possiveis)
+    umidades.append(atual)
+
+    grau = gerar_grau_compactacao(tipo)
+    dens_sec = (grau * densidade_maxima) / 100
+    dens_umid = ((100 + atual) * dens_sec) / 100
+    peso_solo = dens_umid * volume_cm3
+    peso_total_anterior = peso_solo + peso_cilindro
+
+    for _ in range(1, quantidade):
+        candidatos = []
+
+        for u in valores_possiveis:
+            if abs(u - atual) * 10 < diferenca_minima:
+                continue
+
+            grau = gerar_grau_compactacao(tipo)
+            dens_sec = (grau * densidade_maxima) / 100
+            dens_umid = ((100 + u) * dens_sec) / 100
+            peso_solo = dens_umid * volume_cm3
+            peso_total = peso_solo + peso_cilindro
+
+            if abs(peso_total - peso_total_anterior) >= diferenca_peso_minima:
+                candidatos.append(u)
+
+        if not candidatos:
+            candidatos = valores_possiveis  # fallback
+
+        atual = random.choice(candidatos)
+        umidades.append(atual)
+
+        grau = gerar_grau_compactacao(tipo)
+        dens_sec = (grau * densidade_maxima) / 100
+        dens_umid = ((100 + atual) * dens_sec) / 100
+        peso_solo = dens_umid * volume_cm3
+        peso_total_anterior = peso_solo + peso_cilindro
+
+    return umidades
 
 def buscar_cilindro(numero):
     try:
@@ -96,7 +125,7 @@ if executar:
     except:
         st.error("⚠️ Preencha todos os campos corretamente.")
     else:
-        umidades = gerar_umidades_diferenciadas(umidade_hot, qtd)
+        umidades = gerar_umidades_com_criterios(umidade_hot, qtd, peso_cilindro, volume_cilindro * 1000, densidade_maxima, tipo)
         st.success("✅ Ensaios gerados com sucesso!")
 
         for i in range(qtd):
@@ -117,3 +146,7 @@ if executar:
                 st.markdown(f"- **Densidade Seca:** {int(round(dens_sec * 1000))} g/cm³")
                 st.markdown(f"- **Grau de Compactação:** {str(grau).replace('.', ',')} %")
                 st.markdown(f"- **Δ Umidade:** {str(delta_umid).replace('.', ',')}")
+
+
+
+
