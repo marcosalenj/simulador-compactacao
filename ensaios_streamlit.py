@@ -9,11 +9,27 @@ def frange(start, stop, step):
         yield round(start, 2)
         start += step
 
-def gerar_umidades(umidade_hot, quantidade):
+# 🔧 Diferença mínima entre ensaios consecutivos (em décimos)
+diferenca_minima = 3  # ← AJUSTE AQUI SE QUISER OUTRO VALOR (ex: 2 para 0,2 de diferença)
+
+def gerar_umidades_diferenciadas(umidade_hot, quantidade):
+    """Gera uma sequência de umidades com diferença mínima entre valores consecutivos"""
     inicio = round(umidade_hot - 1.0, 1)
     fim = round(umidade_hot - 0.1, 1)
-    valores = [round(i, 1) for i in frange(inicio, fim, 0.1)]
-    return random.choices(valores, k=quantidade)
+    valores_possiveis = [round(i, 1) for i in frange(inicio, fim, 0.1)]
+
+    umidades = []
+    atual = random.choice(valores_possiveis)
+    umidades.append(atual)
+
+    for _ in range(1, quantidade):
+        opcoes_validas = [u for u in valores_possiveis if abs(u - atual) * 10 >= diferenca_minima]
+        if not opcoes_validas:
+            opcoes_validas = valores_possiveis  # fallback de segurança
+        atual = random.choice(opcoes_validas)
+        umidades.append(atual)
+
+    return umidades
 
 def gerar_grau_compactacao(tipo):
     if tipo == "1º Aterro / Ligação":
@@ -31,7 +47,7 @@ def buscar_cilindro(numero):
     except:
         return None
 
-# ============ Interface Principal ============
+# ================== Interface ==================
 
 st.set_page_config(page_title="Ensaios de Solo", layout="centered")
 st.title("Simulador de Ensaios de Solo")
@@ -43,29 +59,29 @@ cilindro_raw = st.text_input("Número do cilindro", placeholder="Ex: 4")
 
 peso_cilindro = None
 volume_cilindro = None
+volume_cilindro_cm3 = None
 
 if cilindro_raw.isdigit():
     resultado = buscar_cilindro(int(cilindro_raw))
     if resultado:
         peso_cilindro, volume_cilindro_cm3 = resultado
-        volume_cilindro = volume_cilindro_cm3 / 1000  # L
+        volume_cilindro = volume_cilindro_cm3 / 1000
     else:
         st.warning("Cilindro não encontrado no banco.")
 
-# Campos só leitura (se valores disponíveis)
 col1, col2 = st.columns(2)
 with col1:
-    st.text_input("Peso do cilindro (g)", value=f"{peso_cilindro}" if peso_cilindro else "", disabled=True)
+    st.text_input("Peso do cilindro (g)", value=str(int(peso_cilindro)) if peso_cilindro else "", disabled=True)
 with col2:
-    st.text_input("Volume do cilindro (cm³)", value=f"{volume_cilindro_cm3}" if volume_cilindro else "", disabled=True)
+    st.text_input("Volume do cilindro (cm³)", value=str(int(volume_cilindro_cm3)) if volume_cilindro_cm3 else "", disabled=True)
 
-# Campos finais
 dens_raw = st.text_input("Densidade máxima", placeholder="Ex: 1.89")
 umidade_raw = st.text_input("Umidade ótima (%)", placeholder="Ex: 12.5")
 
 executar = st.button("Gerar Ensaios")
 
-# ============ Execução dos Ensaios ============
+# ================== Execução ==================
+
 if executar:
     try:
         qtd = int(qtd_raw)
@@ -80,7 +96,7 @@ if executar:
     except:
         st.error("⚠️ Preencha todos os campos corretamente.")
     else:
-        umidades = gerar_umidades(umidade_hot, qtd)
+        umidades = gerar_umidades_diferenciadas(umidade_hot, qtd)
         st.success("✅ Ensaios gerados com sucesso!")
 
         for i in range(qtd):
@@ -96,8 +112,8 @@ if executar:
             with st.expander(f"🔹 Ensaio {i+1:02}"):
                 st.markdown(f"- **Peso do Cilindro + Solo:** {int(round(peso_total))} g")
                 st.markdown(f"- **Peso do Solo:** {int(round(peso_solo))} g")
-                st.markdown(f"- **Densidade Úmida:** {dens_umid:.3f} g/cm³")
-                st.markdown(f"- **Umidade:** {umidade:.1f} %")
-                st.markdown(f"- **Densidade Seca:** {dens_sec:.3f} g/cm³")
-                st.markdown(f"- **Grau de Compactação:** {grau:.1f} %")
-                st.markdown(f"- **Δ Umidade:** {delta_umid:.1f}")
+                st.markdown(f"- **Densidade Úmida:** {int(round(dens_umid * 1000))} g/cm³")
+                st.markdown(f"- **Umidade:** {str(umidade).replace('.', ',')} %")
+                st.markdown(f"- **Densidade Seca:** {int(round(dens_sec * 1000))} g/cm³")
+                st.markdown(f"- **Grau de Compactação:** {str(grau).replace('.', ',')} %")
+                st.markdown(f"- **Δ Umidade:** {str(delta_umid).replace('.', ',')}")
