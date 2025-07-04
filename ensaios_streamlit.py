@@ -17,7 +17,7 @@ def gerar_grau_compactacao(tipo):
     return round(random.uniform(100.0, 102.0), 1)
 
 def gerar_umidades_com_criterios(umidade_hot, quantidade, peso_cilindro, volume_cm3, densidade_maxima, tipo,
-                                  limitar_diferencas, diferenca_minima, diferenca_peso_minima, somente_pares):
+                                  limitar_umidade, limitar_peso, diferenca_minima, diferenca_peso_minima, somente_pares):
     """Gera umidades respeitando critérios"""
     inicio = round(umidade_hot - 1.0, 1)
     fim = round(umidade_hot - 0.1, 1)
@@ -37,9 +37,8 @@ def gerar_umidades_com_criterios(umidade_hot, quantidade, peso_cilindro, volume_
         candidatos = []
 
         for u in valores_possiveis:
-            if limitar_diferencas:
-                if abs(u - atual) * 10 < diferenca_minima:
-                    continue
+            if limitar_umidade and abs(u - atual) * 10 < diferenca_minima:
+                continue
 
             grau = gerar_grau_compactacao(tipo)
             dens_sec = (grau * densidade_maxima) / 100
@@ -47,9 +46,8 @@ def gerar_umidades_com_criterios(umidade_hot, quantidade, peso_cilindro, volume_
             peso_solo = dens_umid * volume_cm3
             peso_total = peso_solo + peso_cilindro
 
-            if limitar_diferencas:
-                if abs(peso_total - peso_total_anterior) < diferenca_peso_minima:
-                    continue
+            if limitar_peso and abs(peso_total - peso_total_anterior) < diferenca_peso_minima:
+                continue
 
             if not somente_pares or int(round(peso_total)) % 2 == 0:
                 candidatos.append(u)
@@ -88,10 +86,6 @@ tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / 
 qtd_raw = st.text_input("Quantidade de ensaios", placeholder="Ex: 5")
 cilindro_raw = st.text_input("Número do cilindro", placeholder="Ex: 4")
 
-# Checkboxes extras
-limitar_diferencas = st.checkbox("Ativar limite mínimo de diferença entre umidade e peso total", value=True)
-somente_pares = st.checkbox("Apenas números pares no peso total", value=False)
-
 # Configurações de limite
 diferenca_minima = 3        # décimos de umidade (%)
 diferenca_peso_minima = 5   # gramas
@@ -111,8 +105,15 @@ with col1:
 with col2:
     st.text_input("Volume do cilindro (cm³)", value=str(int(volume_cilindro_cm3)) if volume_cilindro_cm3 else "", disabled=True)
 
-dens_raw = st.text_input("Densidade máxima", placeholder="Ex: 1.89")
-umidade_raw = st.text_input("Umidade ótima (%)", placeholder="Ex: 12.5")
+dens_raw = st.text_input("Densidade máxima", placeholder="Ex: 1883")
+umidade_raw = st.text_input("Umidade ótima (%)", placeholder="Ex: 7,4")
+
+# === CHECKBOXES antes do botão ===
+st.markdown("---")
+limitar_umidade = st.checkbox("Limitar diferença mínima de umidade", value=False)
+limitar_peso = st.checkbox("Limitar diferença mínima de peso total", value=False)
+somente_pares = st.checkbox("Apenas números pares no peso total", value=True)
+st.markdown("---")
 
 executar = st.button("Gerar Ensaios")
 
@@ -134,7 +135,7 @@ if executar:
     else:
         umidades = gerar_umidades_com_criterios(
             umidade_hot, qtd, peso_cilindro, volume_cilindro_cm3, densidade_maxima, tipo,
-            limitar_diferencas, diferenca_minima, diferenca_peso_minima, somente_pares
+            limitar_umidade, limitar_peso, diferenca_minima, diferenca_peso_minima, somente_pares
         )
 
         st.success("✅ Ensaios gerados com sucesso!")
@@ -175,3 +176,4 @@ if executar:
             file_name="ensaios.csv",
             mime="text/csv"
         )
+   
