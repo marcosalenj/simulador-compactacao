@@ -1,5 +1,8 @@
 import streamlit as st
 import random
+import sqlite3
+
+# ================== Funções ==================
 
 def frange(start, stop, step):
     while start <= stop:
@@ -17,24 +20,61 @@ def gerar_grau_compactacao(tipo):
         return round(random.uniform(94.5, 96.4), 1)
     return round(random.uniform(100.0, 102.0), 1)
 
+def buscar_cilindro(numero):
+    try:
+        conn = sqlite3.connect('cilindros.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT peso, volume FROM cilindros WHERE numero = ?", (numero,))
+        resultado = cursor.fetchone()
+        conn.close()
+        return resultado
+    except:
+        return None
+
+# ============ Interface Principal ============
+
 st.set_page_config(page_title="Ensaios de Solo", layout="centered")
 st.title("Simulador de Ensaios de Solo")
 
 tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / Sub-base"])
 
-qtd_raw = st.text_input("Quantidade de ensaios")
-peso_raw = st.text_input("Peso do cilindro (g)")
-volume_raw = st.text_input("Volume do cilindro (L)")
-dens_raw = st.text_input("Densidade máxima")
-umidade_raw = st.text_input("Umidade ótima (%)")
+qtd_raw = st.text_input("Quantidade de ensaios", placeholder="Ex: 5")
+cilindro_raw = st.text_input("Número do cilindro", placeholder="Ex: 4")
+
+peso_cilindro = None
+volume_cilindro = None
+
+if cilindro_raw.isdigit():
+    resultado = buscar_cilindro(int(cilindro_raw))
+    if resultado:
+        peso_cilindro, volume_cilindro_cm3 = resultado
+        volume_cilindro = volume_cilindro_cm3 / 1000  # L
+    else:
+        st.warning("Cilindro não encontrado no banco.")
+
+# Campos só leitura (se valores disponíveis)
+col1, col2 = st.columns(2)
+with col1:
+    st.text_input("Peso do cilindro (g)", value=f"{peso_cilindro}" if peso_cilindro else "", disabled=True)
+with col2:
+    st.text_input("Volume do cilindro (cm³)", value=f"{volume_cilindro_cm3}" if volume_cilindro else "", disabled=True)
+
+# Campos finais
+dens_raw = st.text_input("Densidade máxima", placeholder="Ex: 1.89")
+umidade_raw = st.text_input("Umidade ótima (%)", placeholder="Ex: 12.5")
 
 executar = st.button("Gerar Ensaios")
 
+# ============ Execução dos Ensaios ============
 if executar:
     try:
         qtd = int(qtd_raw)
-        peso_cilindro = float(peso_raw.replace(",", "."))
-        volume_cilindro = float(volume_raw.replace(",", "."))
+        numero_cilindro = int(cilindro_raw)
+
+        if not peso_cilindro or not volume_cilindro:
+            st.error("❌ Peso ou volume do cilindro não encontrados.")
+            st.stop()
+
         densidade_maxima = float(dens_raw.replace(",", "").replace(".", "")) / 1000
         umidade_hot = float(umidade_raw.replace(",", "."))
     except:
