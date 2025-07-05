@@ -1,13 +1,14 @@
 import streamlit as st
+import sqlite3
 import random
 import csv
 from io import StringIO
 
-# ===== Configurações visuais =====
+# ===== CONFIGURAÇÕES =====
 st.set_page_config(page_title="Ensaios de Solo", layout="centered")
 st.title("Simulador de Ensaios de Solo")
 
-# ===== Funções auxiliares =====
+# ===== FUNÇÕES AUXILIARES =====
 
 def frange(start, stop, step):
     while start <= stop:
@@ -38,22 +39,30 @@ def gerar_graus_compactacao(tipo, quantidade, min_diff, limitar=True):
             graus.append(tentativa)
     return graus
 
-# ===== Interface =====
+def obter_cilindro(numero):
+    conn = sqlite3.connect("cilindros.db")
+    cur = conn.cursor()
+    cur.execute("SELECT peso, volume FROM cilindros WHERE numero = ?", (numero,))
+    resultado = cur.fetchone()
+    conn.close()
+    return resultado
+
+# ===== INTERFACE =====
 
 tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / Sub-base"])
 registro_raw = st.text_input("Registro (opcional):", placeholder="Ex: lote, obra, setor etc.")
 
-# ⚙️ Checkboxes para ajustes
+# ⚙️ Opções avançadas
 st.markdown("**Opções Avançadas:**")
-usar_limite_umidade = st.checkbox("Usar limite mínimo entre umidades", value=True)
-usar_limite_peso = st.checkbox("Usar limite mínimo entre pesos", value=True)
-apenas_pares = st.checkbox("Apenas números pares no peso total", value=False)
+usar_limite_umidade = st.checkbox("Usar limite mínimo entre umidades", value=False)
+usar_limite_peso = st.checkbox("Usar limite mínimo entre pesos", value=False)
+apenas_pares = st.checkbox("Apenas números pares no peso total", value=True)
 
-# Variáveis configuráveis
-MIN_DIFF_UMIDADE = 3   # ← Altere aqui o mínimo de diferença entre umidades (%)
-MIN_DIFF_PESO = 5      # ← Altere aqui o mínimo de diferença entre pesos (g)
+# Variáveis de controle (você pode mudar aqui)
+MIN_DIFF_UMIDADE = 3   # ← Mínima diferença entre umidades (%)
+MIN_DIFF_PESO = 5      # ← Mínima diferença entre pesos totais (g)
 
-# Dados de entrada
+# Entrada de dados
 qtd_raw = st.text_input("Quantidade de ensaios")
 cilindro_raw = st.text_input("Número do cilindro")
 dens_raw = st.text_input("Densidade máxima")
@@ -70,23 +79,12 @@ if executar:
     except:
         st.error("⚠️ Preencha todos os campos corretamente.")
     else:
-        # Valores fixos do cilindro
-        pesos_cilindros = {
-            1: 986, 2: 964, 3: 952, 4: 1080, 5: 1048, 6: 1190,
-            7: 1197, 8: 1097, 9: 1111, 10: 1186, 11: 1116, 12: 1045
-        }
-        volumes_cilindros = {
-            1: 984, 2: 986, 3: 986, 4: 958, 5: 985, 6: 985,
-            7: 967, 8: 985, 9: 958, 10: 958, 11: 967, 12: 967
-        }
-
-        if numero_cilindro not in pesos_cilindros:
-            st.error("⚠️ Número de cilindro inválido.")
+        resultado = obter_cilindro(numero_cilindro)
+        if resultado is None:
+            st.error("⚠️ Número de cilindro não encontrado no banco de dados.")
         else:
-            peso_cilindro = pesos_cilindros[numero_cilindro]
-            volume_cilindro = volumes_cilindros[numero_cilindro]
+            peso_cilindro, volume_cilindro = resultado
 
-            # Geração dos dados
             umidades = gerar_umidades_baseadas(umidade_hot, qtd, MIN_DIFF_UMIDADE, usar_limite_umidade)
             graus = gerar_graus_compactacao(tipo, qtd, MIN_DIFF_PESO, usar_limite_peso)
 
@@ -99,13 +97,11 @@ if executar:
 
                 dens_sec = (grau * densidade_maxima) / 100
                 dens_umid = ((100 + umidade) * dens_sec) / 100
-                volume_cm3 = volume_cilindro
-                peso_solo = dens_umid * volume_cm3
+                peso_solo = dens_umid * volume_cilindro
                 peso_total = int(round(peso_solo + peso_cilindro))
 
-                # Verifica paridade se checkbox marcado
                 if apenas_pares and peso_total % 2 != 0:
-                    peso_total += 1  # Força para próximo número par
+                    peso_total += 1
 
                 pesos_totais.append(peso_total)
                 delta_umid = round(umidade - umidade_hot, 2)
@@ -118,9 +114,8 @@ if executar:
                     st.markdown(f"- **Umidade:** {str(umidade).replace('.', ',')} %")
                     st.markdown(f"- **Densidade Seca:** {int(round(dens_sec * 1000))}")
                     st.markdown(f"- **Grau de Compactação:** {str(grau).replace('.', ',')} %")
-                    st.markdown(f"- **Δ Umidade:** {str(delta_umid).replace('.', ',')}")
 
-            # Geração do CSV
+            # ===== GERAR CSV =====
             csv_buffer = StringIO()
             campos = ["Cilindro", "Peso_Total", "Umidade"]
             if registro_raw.strip():
