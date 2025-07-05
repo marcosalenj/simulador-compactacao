@@ -2,7 +2,8 @@ import streamlit as st
 import random
 import sqlite3
 import pandas as pd
-from streamlit_js_eval import streamlit_js_eval
+
+# ======= CONFIGURAÇÕES =======
 
 def frange(start, stop, step):
     while start <= stop:
@@ -16,6 +17,7 @@ def gerar_grau_compactacao(tipo):
 
 def gerar_umidades_com_criterios(umidade_hot, quantidade, peso_cilindro, volume_cm3, densidade_maxima, tipo,
                                   limitar_umidade, limitar_peso, diferenca_minima, diferenca_peso_minima, somente_pares):
+    """Gera umidades respeitando critérios"""
     inicio = round(umidade_hot - 1.0, 1)
     fim = round(umidade_hot - 0.1, 1)
     valores_possiveis = [round(i, 1) for i in frange(inicio, fim, 0.1)]
@@ -74,75 +76,28 @@ def buscar_cilindro(numero):
     except:
         return None
 
-# ========== INTERFACE ==========
+# ======= INTERFACE =======
 
 st.set_page_config(page_title="Ensaios de Solo", layout="centered")
 st.title("Simulador de Ensaios de Solo")
 
 tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / Sub-base"])
+
+# Campo opcional Registro logo abaixo do tipo de ensaio
 registro = st.text_input("Registro (opcional)", placeholder="Digite o número do registro, se houver")
 
-# Inputs HTML com teclado numérico (type="tel")
-st.markdown("### Dados do Ensaio")
+qtd_raw = st.text_input("Quantidade de ensaios", placeholder="Ex: 5")
+cilindro_raw = st.text_input("Número do cilindro", placeholder="Ex: 4")
 
-st.markdown("""
-<input id="qtd_ensaios" type="tel" placeholder="Quantidade de ensaios"
-style="width:100%; padding:8px; font-size:16px;" />
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<input id="num_cilindro" type="tel" placeholder="Número do cilindro"
-style="width:100%; padding:8px; font-size:16px;" />
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<input id="densidade_max" type="tel" placeholder="Densidade máxima (ex: 1883)"
-style="width:100%; padding:8px; font-size:16px;" />
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<input id="umidade_hot" type="tel" step="0.1" placeholder="Umidade ótima (ex: 7,4)"
-style="width:100%; padding:8px; font-size:16px;" />
-""", unsafe_allow_html=True)
-
-# Captura via JS com label
-qtd_raw = streamlit_js_eval("document.getElementById('qtd_ensaios')?.value", key="qtd", label="Qtd Ensaio")
-cilindro_raw = streamlit_js_eval("document.getElementById('num_cilindro')?.value", key="cilindro", label="Cilindro")
-dens_raw = streamlit_js_eval("document.getElementById('densidade_max')?.value", key="dens", label="Densidade Máxima")
-umidade_raw = streamlit_js_eval("document.getElementById('umidade_hot')?.value", key="umid", label="Umidade Ótima")
-
-# Salvar no session_state
-if qtd_raw:
-    st.session_state["qtd_raw"] = qtd_raw
-if cilindro_raw:
-    st.session_state["cilindro_raw"] = cilindro_raw
-if dens_raw:
-    st.session_state["dens_raw"] = dens_raw
-if umidade_raw:
-    st.session_state["umidade_raw"] = umidade_raw
-
-# Usar valores salvos
-qtd_raw = st.session_state.get("qtd_raw", "")
-cilindro_raw = st.session_state.get("cilindro_raw", "")
-dens_raw = st.session_state.get("dens_raw", "")
-umidade_raw = st.session_state.get("umidade_raw", "")
-
-# Limites fixos
-diferenca_minima = 3        # décimos de umidade
+# Configurações de limite
+diferenca_minima = 3        # décimos de umidade (%)
 diferenca_peso_minima = 5   # gramas
 
-# Checkboxes
-st.markdown("---")
-limitar_umidade = st.checkbox("Limitar diferença mínima de umidade", value=False)
-limitar_peso = st.checkbox("Limitar diferença mínima de peso total", value=False)
-somente_pares = st.checkbox("Apenas números pares no peso total", value=True)
-st.markdown("---")
-
-# Peso/Volume do banco
+# Peso/volume do banco
 peso_cilindro = None
 volume_cilindro_cm3 = None
 
-if cilindro_raw and str(cilindro_raw).isdigit():
+if cilindro_raw.isdigit():
     resultado = buscar_cilindro(int(cilindro_raw))
     if resultado:
         peso_cilindro, volume_cilindro_cm3 = resultado
@@ -153,8 +108,19 @@ with col1:
 with col2:
     st.text_input("Volume do cilindro (cm³)", value=str(int(volume_cilindro_cm3)) if volume_cilindro_cm3 else "", disabled=True)
 
-# EXECUTAR
+dens_raw = st.text_input("Densidade máxima", placeholder="Ex: 1883")
+umidade_raw = st.text_input("Umidade ótima (%)", placeholder="Ex: 7,4")
+
+# === CHECKBOXES antes do botão ===
+st.markdown("---")
+limitar_umidade = st.checkbox("Limitar diferença mínima de umidade", value=False)
+limitar_peso = st.checkbox("Limitar diferença mínima de peso total", value=False)
+somente_pares = st.checkbox("Apenas números pares no peso total", value=True)
+st.markdown("---")
+
 executar = st.button("Gerar Ensaios")
+
+# ======= EXECUÇÃO =======
 
 if executar:
     try:
@@ -165,8 +131,8 @@ if executar:
             st.error("❌ Peso ou volume do cilindro não encontrados.")
             st.stop()
 
-        densidade_maxima = float(str(dens_raw).replace(",", "").replace(".", "")) / 1000
-        umidade_hot = float(str(umidade_raw).replace(",", "."))
+        densidade_maxima = float(dens_raw.replace(",", "").replace(".", "")) / 1000
+        umidade_hot = float(umidade_raw.replace(",", "."))
     except:
         st.error("⚠️ Preencha todos os campos corretamente.")
     else:
