@@ -4,8 +4,6 @@ import sqlite3
 import pandas as pd
 from streamlit_js_eval import streamlit_js_eval
 
-# ========== FUNÇÕES ==========
-
 def frange(start, stop, step):
     while start <= stop:
         yield round(start, 2)
@@ -107,11 +105,11 @@ st.markdown("""
 style="width:100%; padding:8px; font-size:16px;" />
 """, unsafe_allow_html=True)
 
-# Captura via JS
-qtd_raw = streamlit_js_eval("document.getElementById('qtd_ensaios')?.value", key="qtd")
-cilindro_raw = streamlit_js_eval("document.getElementById('num_cilindro')?.value", key="cilindro")
-dens_raw = streamlit_js_eval("document.getElementById('densidade_max')?.value", key="dens")
-umidade_raw = streamlit_js_eval("document.getElementById('umidade_hot')?.value", key="umid")
+# Captura via JS com label
+qtd_raw = streamlit_js_eval("document.getElementById('qtd_ensaios')?.value", key="qtd", label="Qtd Ensaio")
+cilindro_raw = streamlit_js_eval("document.getElementById('num_cilindro')?.value", key="cilindro", label="Cilindro")
+dens_raw = streamlit_js_eval("document.getElementById('densidade_max')?.value", key="dens", label="Densidade Máxima")
+umidade_raw = streamlit_js_eval("document.getElementById('umidade_hot')?.value", key="umid", label="Umidade Ótima")
 
 # Salvar no session_state
 if qtd_raw:
