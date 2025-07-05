@@ -52,12 +52,6 @@ def obter_cilindro(numero):
 tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / Sub-base"])
 registro_raw = st.text_input("Registro (opcional):", placeholder="Ex: lote, obra, setor etc.")
 
-# ⚙️ Opções avançadas
-st.markdown("**Opções Avançadas:**")
-usar_limite_umidade = st.checkbox("Usar limite mínimo entre umidades", value=False)
-usar_limite_peso = st.checkbox("Usar limite mínimo entre pesos", value=False)
-apenas_pares = st.checkbox("Apenas números pares no peso total", value=True)
-
 # Variáveis de controle (você pode mudar aqui)
 MIN_DIFF_UMIDADE = 3   # ← Mínima diferença entre umidades (%)
 MIN_DIFF_PESO = 5      # ← Mínima diferença entre pesos totais (g)
@@ -67,6 +61,12 @@ qtd_raw = st.text_input("Quantidade de ensaios")
 cilindro_raw = st.text_input("Número do cilindro")
 dens_raw = st.text_input("Densidade máxima")
 umidade_raw = st.text_input("Umidade ótima (%)")
+
+# ⚙️ Opções avançadas
+st.markdown("**Opções Avançadas:**")
+usar_limite_umidade = st.checkbox("Usar limite mínimo entre umidades", value=False)
+usar_limite_peso = st.checkbox("Usar limite mínimo entre pesos", value=False)
+apenas_pares = st.checkbox("Apenas números pares no peso total", value=True)
 
 executar = st.button("Gerar Ensaios")
 
