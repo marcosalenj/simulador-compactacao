@@ -17,7 +17,6 @@ def gerar_grau_compactacao(tipo):
 
 def gerar_umidades_com_criterios(umidade_hot, quantidade, peso_cilindro, volume_cm3, densidade_maxima, tipo,
                                   limitar_umidade, limitar_peso, diferenca_minima, diferenca_peso_minima, somente_pares):
-    """Gera umidades respeitando critérios"""
     inicio = round(umidade_hot - 1.0, 1)
     fim = round(umidade_hot - 0.1, 1)
     valores_possiveis = [round(i, 1) for i in frange(inicio, fim, 0.1)]
@@ -79,11 +78,22 @@ def buscar_cilindro(numero):
 # ======= INTERFACE =======
 
 st.set_page_config(page_title="Ensaios de Solo", layout="centered")
+st.markdown("""
+<style>
+    input, select, textarea, button {
+        font-size: 18px !important;
+    }
+    .stTextInput > div > input,
+    .stSelectbox > div > div,
+    .stTextArea > div > textarea {
+        padding: 10px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("Simulador de Ensaios de Solo")
 
 tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / Sub-base"])
-
-# Campo opcional Registro logo abaixo do tipo de ensaio
 registro = st.text_input("Registro (opcional)", placeholder="Digite o número do registro, se houver")
 
 qtd_raw = st.text_input("Quantidade de ensaios", placeholder="Ex: 5")
@@ -93,7 +103,6 @@ cilindro_raw = st.text_input("Número do cilindro", placeholder="Ex: 4")
 diferenca_minima = 3        # décimos de umidade (%)
 diferenca_peso_minima = 5   # gramas
 
-# Peso/volume do banco
 peso_cilindro = None
 volume_cilindro_cm3 = None
 
@@ -102,16 +111,12 @@ if cilindro_raw.isdigit():
     if resultado:
         peso_cilindro, volume_cilindro_cm3 = resultado
 
-col1, col2 = st.columns(2)
-with col1:
-    st.text_input("Peso do cilindro (g)", value=str(int(peso_cilindro)) if peso_cilindro else "", disabled=True)
-with col2:
-    st.text_input("Volume do cilindro (cm³)", value=str(int(volume_cilindro_cm3)) if volume_cilindro_cm3 else "", disabled=True)
+st.text_input("Peso do cilindro (g)", value=str(int(peso_cilindro)) if peso_cilindro else "", disabled=True)
+st.text_input("Volume do cilindro (cm³)", value=str(int(volume_cilindro_cm3)) if volume_cilindro_cm3 else "", disabled=True)
 
 dens_raw = st.text_input("Densidade máxima", placeholder="Ex: 1883")
 umidade_raw = st.text_input("Umidade ótima (%)", placeholder="Ex: 7,4")
 
-# === CHECKBOXES antes do botão ===
 st.markdown("---")
 limitar_umidade = st.checkbox("Limitar diferença mínima de umidade", value=False)
 limitar_peso = st.checkbox("Limitar diferença mínima de peso total", value=False)
@@ -119,8 +124,6 @@ somente_pares = st.checkbox("Apenas números pares no peso total", value=True)
 st.markdown("---")
 
 executar = st.button("Gerar Ensaios")
-
-# ======= EXECUÇÃO =======
 
 if executar:
     try:
@@ -172,7 +175,6 @@ if executar:
                 st.markdown(f"- **Densidade Seca:** {int(round(dens_sec * 1000))} g/cm³")
                 st.markdown(f"- **Grau de Compactação:** {str(grau).replace('.', ',')} %")
 
-        # Exportar para CSV
         df_export = pd.DataFrame(resultados)
         csv = df_export.to_csv(index=False, sep=";", encoding="utf-8").encode()
 
