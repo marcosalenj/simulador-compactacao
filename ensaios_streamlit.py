@@ -2,7 +2,6 @@ import streamlit as st
 import random
 import sqlite3
 import pandas as pd
-import io
 
 # ======= CONFIGURAÇÕES =======
 
@@ -83,6 +82,10 @@ st.set_page_config(page_title="Ensaios de Solo", layout="centered")
 st.title("Simulador de Ensaios de Solo")
 
 tipo = st.selectbox("Tipo de ensaio:", ["1º Aterro / Ligação", "2º Aterro / Sub-base"])
+
+# Campo opcional Registro logo abaixo do tipo de ensaio
+registro = st.text_input("Registro (opcional)", placeholder="Digite o número do registro, se houver")
+
 qtd_raw = st.text_input("Quantidade de ensaios", placeholder="Ex: 5")
 cilindro_raw = st.text_input("Número do cilindro", placeholder="Ex: 4")
 
@@ -149,13 +152,17 @@ if executar:
             dens_umid = ((100 + umidade) * dens_sec) / 100
             peso_solo = dens_umid * volume_cilindro_cm3
             peso_total = peso_solo + peso_cilindro
-            delta_umid = round(umidade - umidade_hot, 2)
 
-            resultados.append({
+            resultado_dict = {
                 "Cilindro": numero_cilindro,
                 "Peso_Total": int(round(peso_total)),
                 "Umidade": str(umidade).replace('.', ',')
-            })
+            }
+
+            if registro.strip():
+                resultado_dict["Registro"] = registro.strip()
+
+            resultados.append(resultado_dict)
 
             with st.expander(f"🔹 Ensaio {i+1:02}"):
                 st.markdown(f"- **Peso do Cilindro + Solo:** {int(round(peso_total))} g")
@@ -164,7 +171,6 @@ if executar:
                 st.markdown(f"- **Umidade:** {str(umidade).replace('.', ',')} %")
                 st.markdown(f"- **Densidade Seca:** {int(round(dens_sec * 1000))} g/cm³")
                 st.markdown(f"- **Grau de Compactação:** {str(grau).replace('.', ',')} %")
-                st.markdown(f"- **Δ Umidade:** {str(delta_umid).replace('.', ',')}")
 
         # Exportar para CSV
         df_export = pd.DataFrame(resultados)
@@ -176,4 +182,3 @@ if executar:
             file_name="ensaios.csv",
             mime="text/csv"
         )
-   
